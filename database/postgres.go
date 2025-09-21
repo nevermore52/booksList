@@ -16,7 +16,7 @@ type Config struct {
 }
 
 type Postgres struct {
-	db 		*sqlx.DB
+	DB 		*sqlx.DB
 }
 
 func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
@@ -34,11 +34,13 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 		}
 
 		sql := (` CREATE TABLE IF not exists books(
-		id INT primary KEY, 
+		id SERIAL PRIMARY KEY, 
 		title VARCHAR(50) NOT NULL, 
 		author VARCHAR(50) NOT NULL, 
+		pages VARCHAR(50) NOT NULL,
 		readed BOOLEAN DEFAULT FALSE,
-		timeADD TIMESTAMP DEFAULT CURRENT_TIMESTAMP )`)
+		timeADD TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		timeREAD TIMESTAMP)`)
 		if _, err := db.Exec(sql); err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -49,10 +51,10 @@ func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 }
 
 func (p *Postgres) DBInsertBooks(title string, author string, pages int) {
-	if _, err := p.db.Exec(`
+	if _, err := p.DB.Exec(`
 	INSERT INTO books (title,author,pages)
-	VALUES(хуй, пизда, головка)
-	`); err != nil {
+	VALUES($1, $2, $3)
+	`,title, author, pages); err != nil {
 		fmt.Print("error insert to books", err)
 	}
 	

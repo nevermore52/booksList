@@ -28,8 +28,8 @@ func main() {
 
 				defer db.Close()
 
-
-	library := library.NewLibrary()
+	pg := database.Postgres{DB: db}
+	library := library.NewLibrary(pg)
 	httpHandlers := http.NewHTTPHandlers(library)
 	httpServer := http.NewHTTPServer(httpHandlers)
 	if err := httpServer.StartServer(); err != nil {

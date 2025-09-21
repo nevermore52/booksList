@@ -12,9 +12,10 @@ type Library struct {
 	mtx		sync.RWMutex
 	postgres database.Postgres
 }
-func NewLibrary() *Library{
+func NewLibrary(pg database.Postgres) *Library{
 	return  &Library{
 		books: make(map[string]Book),
+		postgres: pg,
 	}
 }
 
