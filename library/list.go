@@ -14,15 +14,18 @@ type Library struct {
 }
 
 func NewLibrary(pg database.Postgres) *Library {
+	tempBooks, err := pg.DBExportBooks()
+	if err != nil {
+		fmt.Println(err)
+	}
 	return &Library{
-		books:    make(map[string]str.Book),
+		books:    tempBooks,
 		postgres: pg,
 	}
 }
 
 func (l *Library) AddBook(book str.Book) error {
 	l.mtx.Lock()
-
 	if _, ok := l.books[book.Title]; ok {
 		l.mtx.Unlock()
 		return ErrBookAlreadyExists
@@ -40,11 +43,8 @@ func (l *Library) GetBook(title string) (str.Book, error) {
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
 
-	tempBooks, err := l.postgres.DBExportBooks()
-	if err != nil {
-		fmt.Println(err)
-	}
-	book, ok := tempBooks[title]
+
+	book, ok := l.books[title]
 	if !ok {
 		return str.Book{}, ErrBookNotFound
 	}
@@ -88,7 +88,7 @@ func (l *Library) ReadBook(title string) error {
 	defer l.mtx.Unlock()
 	book := l.books[title]
 
-	book.ReadBook()
+	ReadBook(&book)
 	l.postgres.DBReadBook(title)
 	l.books[title] = book
 
@@ -103,7 +103,7 @@ func (l *Library) UnReadBook(title string) error {
 		return ErrBookNotFound
 	}
 
-	book.UnReadBook()
+	UnReadBook(&book)
 
 	l.books[title] = book
 
@@ -131,7 +131,7 @@ func (l *Library) BoolReadBook(title string) bool {
 		return false
 	}
 
-	b := book.BoolReadBooks()
+	b := BoolReadBooks(&book)
 
 	return b
 }

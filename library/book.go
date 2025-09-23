@@ -16,17 +16,17 @@ func NewBook(title string, author string, pages int) str.Book {
 	}
 }
 
-func ReadBook() {
+func ReadBook(b *str.Book) {
 	TimeRead := time.Now()
 	b.Readed = true
 	b.Timereaded = &TimeRead
 }
 
-func (b *str.Book) UnReadBook() {
+func UnReadBook(b *str.Book) {
 	b.Readed = false
 	b.Timereaded = nil
 }
 
-func (b *Book) BoolReadBooks() bool {
-	return b.Readeed
+func  BoolReadBooks(b *str.Book) bool {
+	return b.Readed
 }

@@ -23,18 +23,7 @@ type Postgres struct {
 	DB 		*sqlx.DB
 
 }
-/*
-type Book struct {
-	id 			int    `db:"id"`
-	title 		string `db:"title"`
-	author		string `db:"author"`
-	pages 		int	   `db:"pages"`
-	readed 		bool   `db:"readed"`
-	
-	timeadd 	time.Time	`db:"timeadd"`
-	timeread	time.Time	`db:"timeread"`
-} 
-*/
+
 
 func NewPostgresDB(cfg Config) (*sqlx.DB, error) {
 	config := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
