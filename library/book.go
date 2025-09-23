@@ -1,38 +1,30 @@
 package library
 
-import "time"
-
-type Book struct{
-	Title		string
-	Author		string
-	Pages		int
-	Readeed		bool
-	
-	TimeAdd		time.Time
-	TimeReaded	*time.Time
-}
-
-func NewBook(title string, author string, pages int) Book {
-	return Book{
+import (
+	"libraryes/struct"
+	"time"
+)
+func NewBook(title string, author string, pages int) str.Book {
+	return str.Book{
 		Title: title,
 		Author: author,
 		Pages: pages,
-		Readeed: false,
+		Readed: false,
 
-		TimeAdd: time.Now(),
-		TimeReaded: nil,
+		Timeadd: time.Now(),
+		Timereaded: nil,
 	}
 }
 
-func (b *Book) ReadBook() {
+func ReadBook() {
 	TimeRead := time.Now()
-	b.Readeed = true
-	b.TimeReaded = &TimeRead
+	b.Readed = true
+	b.Timereaded = &TimeRead
 }
 
-func (b *Book) UnReadBook() {
-	b.Readeed = false
-	b.TimeReaded = nil
+func (b *str.Book) UnReadBook() {
+	b.Readed = false
+	b.Timereaded = nil
 }
 
 func (b *Book) BoolReadBooks() bool {

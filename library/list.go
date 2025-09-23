@@ -1,78 +1,82 @@
 package library
 
 import (
+	"fmt"
 	"libraryes/database"
+	"libraryes/struct"
 	"sync"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Library struct {
-	books  	map[string]Book
-	mtx		sync.RWMutex
+	books    map[string]str.Book
+	mtx      sync.RWMutex
 	postgres database.Postgres
 }
-func NewLibrary(pg database.Postgres) *Library{
-	return  &Library{
-		books: make(map[string]Book),
+
+func NewLibrary(pg database.Postgres) *Library {
+	return &Library{
+		books:    make(map[string]str.Book),
 		postgres: pg,
 	}
 }
 
-func (l *Library) AddBook(book Book, db *sqlx.DB) error {
+func (l *Library) AddBook(book str.Book) error {
 	l.mtx.Lock()
-	
-	if _, ok := l.books[book.Title]; ok{
+
+	if _, ok := l.books[book.Title]; ok {
 		l.mtx.Unlock()
 		return ErrBookAlreadyExists
 	}
-	l.mtx.Unlock()		
-	
-    l.postgres.DBInsertBooks(book.Title,book.Author,book.Pages)
+	l.mtx.Unlock()
+
+	l.postgres.DBInsertBooks(book.Title, book.Author, book.Pages)
 
 	l.books[book.Title] = book
-
-	
 
 	return nil
 }
 
-func (l *Library) GetBook(title string) (Book, error) {
+func (l *Library) GetBook(title string) (str.Book, error) {	
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
-	book , ok  := l.books[title]
-	if !ok{
-		return Book{}, ErrBookNotFound
+
+	tempBooks, err := l.postgres.DBExportBooks()
+	if err != nil {
+		fmt.Println(err)
+	}
+	book, ok := tempBooks[title]
+	if !ok {
+		return str.Book{}, ErrBookNotFound
 	}
 	return book, nil
 }
 
-func (l *Library) ListBooks() map[string]Book {
+func (l *Library) ListBooks() map[string]str.Book {
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
 	return l.books
 }
 
-func (l *Library) ListUnReadedBooks() map[string]Book {
+func (l *Library) ListUnReadedBooks() map[string]str.Book {
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
-	UnReadedBooks := make(map[string]Book)
+	UnReadedBooks := make(map[string]str.Book)
 
-	for title, book := range l.books{
-		if !book.Readeed{
-		UnReadedBooks[title] = book
+	for title, book := range l.books {
+		if !book.Readed {
+			UnReadedBooks[title] = book
 		}
 	}
 	return UnReadedBooks
 }
 
-func (l *Library) ListReadedBooks() map[string]Book {
+func (l *Library) ListReadedBooks() map[string]str.Book {
 	l.mtx.RLock()
 	defer l.mtx.RUnlock()
-	ReadedBooks := make(map[string]Book)
+	ReadedBooks := make(map[string]str.Book)
 
-	for title, book := range l.books{
-		if book.Readeed{
+	for title, book := range l.books {
+		if book.Readed {
 			ReadedBooks[title] = book
 		}
 	}
@@ -82,13 +86,10 @@ func (l *Library) ListReadedBooks() map[string]Book {
 func (l *Library) ReadBook(title string) error {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
-	book, ok := l.books[title]
-	if !ok {
-		return ErrBookNotFound
-	}
+	book := l.books[title]
 
 	book.ReadBook()
-
+	l.postgres.DBReadBook(title)
 	l.books[title] = book
 
 	return nil
@@ -98,7 +99,7 @@ func (l *Library) UnReadBook(title string) error {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
 	book, ok := l.books[title]
-	if !ok{
+	if !ok {
 		return ErrBookNotFound
 	}
 
@@ -122,7 +123,7 @@ func (l *Library) DeleteBook(title string) error {
 	return nil
 }
 
-func (l *Library) BoolReadBook(title string) (bool) {
+func (l *Library) BoolReadBook(title string) bool {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
 	book, ok := l.books[title]
@@ -135,11 +136,11 @@ func (l *Library) BoolReadBook(title string) (bool) {
 	return b
 }
 
-func (l *Library) ListBooksAuthor(author string) map[string]Book {
+func (l *Library) ListBooksAuthor(author string) map[string]str.Book {
 	l.mtx.Lock()
 	defer l.mtx.Unlock()
-	ListBooksAuthor := make(map[string]Book)
-	for title, book := range  l.books {
+	ListBooksAuthor := make(map[string]str.Book)
+	for title, book := range l.books {
 		if author == book.Author {
 			ListBooksAuthor[title] = book
 		}

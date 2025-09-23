@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
 )
 
 type HTTPHandlers struct {
@@ -22,8 +21,7 @@ func NewHTTPHandlers(library *library.Library) *HTTPHandlers{
 	}
 }
 
-func (h *HTTPHandlers) HandleCreateBook(db *sqlx.DB) http.HandlerFunc{
-	return func(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPHandlers) HandleCreateBook(w http.ResponseWriter, r *http.Request) {
 	var BookDTO = BookDTO{}
 	if err := json.NewDecoder(r.Body).Decode(&BookDTO); err != nil{
 		errDTO := CreateErrDTO(err.Error(), time.Now())
@@ -39,7 +37,7 @@ func (h *HTTPHandlers) HandleCreateBook(db *sqlx.DB) http.HandlerFunc{
 	}
 
 	books := library.NewBook(BookDTO.Title, BookDTO.Author, BookDTO.Pages)
-	if err := h.books.AddBook(books, db); err != nil{
+	if err := h.books.AddBook(books); err != nil{
 		errDTO := CreateErrDTO(err.Error(), time.Now())
 		
 		if errors.Is(err, library.ErrBookAlreadyExists){
@@ -60,7 +58,7 @@ func (h *HTTPHandlers) HandleCreateBook(db *sqlx.DB) http.HandlerFunc{
 		fmt.Print(err)
 	}
 }
-}
+
 
 func (h *HTTPHandlers) HandleGetBook(w http.ResponseWriter, r *http.Request) {
 	title := mux.Vars(r)["title"] // http://localhost:8081/books/title
@@ -94,9 +92,9 @@ func (h *HTTPHandlers) HandleReadBook(w http.ResponseWriter, r *http.Request) {
 	var completeDTO = CompleteBookDTO{}
 	if err := json.NewDecoder(r.Body).Decode(&completeDTO); err != nil {
 		errDTO := CreateErrDTO(err.Error(), time.Now())
-		http.Error(w, errDTO.ToString(), http.StatusBadRequest)
 		b := []byte("error in request body")
 		w.Write(b)
+		http.Error(w, errDTO.ToString(), http.StatusBadRequest)
 	}
 
 	title := mux.Vars(r)["title"]
