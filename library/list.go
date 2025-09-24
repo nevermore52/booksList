@@ -117,7 +117,7 @@ func (l *Library) DeleteBook(title string) error {
 	if !ok {
 		return ErrBookNotFound
 	}
-
+	l.postgres.DBDeleteBook(title)
 	delete(l.books, title)
 
 	return nil

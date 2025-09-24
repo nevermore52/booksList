@@ -62,6 +62,7 @@ func (p *Postgres) DBInsertBooks(title string, author string, pages int) {
 	VALUES($1, $2, $3)
 	`,title, author, pages); err != nil {
 		fmt.Print("error insert to books: ", err)
+		return
 	}
 	
 }
@@ -77,6 +78,7 @@ func (p *Postgres) DBReadBook(title string) {
 	WHERE title = $1
 	`,title, true); err != nil {
 		fmt.Println("error update readed book: ", err)
+		return
 	}
 
 }
@@ -93,4 +95,14 @@ func (p *Postgres) DBExportBooks() (map[string]str.Book, error){
 	return tempMap, err
   
 	
+}
+
+func (p *Postgres) DBDeleteBook(title string) {
+	if _, err := p.DB.Exec(`
+	DELETE FROM books
+	WHERE title = $1
+	`, title); err != nil{
+		fmt.Println(err)
+		return 
+	}
 }
