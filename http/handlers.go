@@ -135,7 +135,7 @@ func (h *HTTPHandlers) HandleGetAllBook(w http.ResponseWriter, r *http.Request) 
 	}
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(b); err != nil {
-		fmt.Println("failed towrite http response")
+		fmt.Println("failed to write http response")
 		return
 	}
 }
@@ -193,4 +193,61 @@ func (h *HTTPHandlers) HandleListBookAuthor(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "failed to write http response", http.StatusBadGateway)
 	}
 
+}
+
+func (h *HTTPHandlers) HandleCreateAuthor(w http.ResponseWriter, r *http.Request) {
+	AuthorDTO := AuthorDTO{}
+	if err := json.NewDecoder(r.Body).Decode(&AuthorDTO); err != nil{
+		errDTO := CreateErrDTO(err.Error(), time.Now())
+
+		http.Error(w, errDTO.ToString(), http.StatusBadRequest)
+		return
+	}
+
+	author := library.NewAuthor(AuthorDTO.Author)
+	if err := h.books.AddAuthor(author); err != nil {
+		errDTO := CreateErrDTO(err.Error(), time.Now())
+		
+		if errors.Is(err, library.ErrBookAlreadyExists){
+			http.Error(w, errDTO.ToString(), http.StatusConflict)
+		} else {
+			http.Error(w, errDTO.ToString(), http.StatusConflict) 
+		}
+	return
+	}
+	b, err := json.MarshalIndent(author, "", "	")
+	if err != nil {
+		panic(err)
+	}
+	
+
+	if _, err := w.Write(b); err != nil {
+		fmt.Print(err)
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *HTTPHandlers) HandleDeleteAuthor(w http.ResponseWriter, r *http.Request) {
+	author := mux.Vars(r)["title"]
+	if err := h.books.DeleteAuthor(author); err != nil {
+		errDTO := CreateErrDTO(err.Error(), time.Now())
+			if errors.Is(err, library.ErrBookNotFound){
+				http.Error(w, errDTO.ToString(), http.StatusNotFound)
+			} else {
+				http.Error(w, errDTO.ToString(), http.StatusInternalServerError)
+			}
+	}
+}
+
+func (h *HTTPHandlers) HandleListAuthors(w http.ResponseWriter, r *http.Request) {
+	author := h.books.ListAuthors()
+
+	b, err := json.MarshalIndent(author, "", "	")
+	if err != nil {
+		panic(err)
+	}
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(b); err != nil {
+		fmt.Println("failed to write http response")
+	}
 }

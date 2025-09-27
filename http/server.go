@@ -23,8 +23,10 @@ func (h *HTTPServer) StartServer() error{
 		fmt.Println("error read env file")
 	}
 	router := mux.NewRouter()
-
-	router.Path("/books").Methods("POST").HandlerFunc(h.httpHandlers.HandleCreateBook)
+	router.Path("/authors").Methods("POST").HandlerFunc(h.httpHandlers.HandleCreateAuthor)
+	router.Path("/authors").Methods("GET").HandlerFunc(h.httpHandlers.HandleGetAllBook)
+	router.Path("/authors").Methods("DELETE").HandlerFunc(h.httpHandlers.HandleDeleteAuthor)
+    router.Path("/books").Methods("POST").HandlerFunc(h.httpHandlers.HandleCreateBook)
 	router.Path("/books/{title}").Methods("GET").HandlerFunc(h.httpHandlers.HandleGetBook)
 	router.Path("/books").Methods("GET").Queries("readed", "true").HandlerFunc(h.httpHandlers.HandleGetReadedBook)
 	router.Path("/books").Methods("GET").Queries("readed", "false").HandlerFunc(h.httpHandlers.HandleGetUnReadedBook)

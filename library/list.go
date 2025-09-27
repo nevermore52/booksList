@@ -9,6 +9,7 @@ import (
 
 type Library struct {
 	books    map[string]str.Book
+	authors  map[string]str.Author
 	mtx      sync.RWMutex
 	postgres database.Postgres
 }
@@ -17,22 +18,32 @@ func NewLibrary(pg database.Postgres) *Library {
 	tempBooks, err := pg.DBExportBooks()
 	if err != nil {
 		fmt.Println(err)
+		return nil
+	}
+	tempAuthors, err := pg.DBExportAuthors()
+	if err != nil {
+		fmt.Println(err)
+		return nil
 	}
 	return &Library{
 		books:    tempBooks,
 		postgres: pg,
+		authors:  tempAuthors,
 	}
 }
 
 func (l *Library) AddBook(book str.Book) error {
 	l.mtx.Lock()
+	if err := l.postgres.DBInsertBooks(book.Title, book.Author, book.Pages); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	
 	if _, ok := l.books[book.Title]; ok {
 		l.mtx.Unlock()
 		return ErrBookAlreadyExists
 	}
 	l.mtx.Unlock()
-
-	l.postgres.DBInsertBooks(book.Title, book.Author, book.Pages)
 
 	l.books[book.Title] = book
 
@@ -146,4 +157,36 @@ func (l *Library) ListBooksAuthor(author string) map[string]str.Book {
 		}
 	}
 	return ListBooksAuthor
+}
+
+func (l *Library) ListAuthors() map[string]str.Author {
+	l.mtx.RLock()
+	defer l.mtx.RUnlock()
+
+	return l.authors
+}
+
+func (l *Library) AddAuthor(author str.Author) error {
+	if err := l.postgres.DBAddAuthor(author.Author); err != nil {
+		return err
+	}
+
+	l.authors[author.Author] = author
+
+	return nil
+}
+
+func (l *Library) DeleteAuthor(author string) error {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+	if err := l.postgres.DBDeleteAuthor(author); err != nil {
+		return err
+	}
+	_, ok := l.authors[author]
+	if !ok {
+		return ErrBookNotFound
+	}
+	delete(l.authors,author)
+	
+	return nil
 }

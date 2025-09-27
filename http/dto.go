@@ -29,14 +29,14 @@ type ErrorDTO struct {
 	time    time.Time
 }
 
-func CreateErrDTO(message string, time time.Time) ErrorDTO{
+func CreateErrDTO(message string, time time.Time) ErrorDTO {
 	return ErrorDTO{
 		Message: message,
 		time: time,
 	}
 }
 
-func (e ErrorDTO) ToString() string{
+func (e ErrorDTO) ToString() string {
 	b, err := json.MarshalIndent(e, "", "    ")
 	if err != nil {
 		panic(err)
@@ -45,6 +45,10 @@ func (e ErrorDTO) ToString() string{
 	return string(b)
 }
 
-type CompleteBookDTO struct{
+type CompleteBookDTO struct {
 	Complete bool
+}
+
+type AuthorDTO struct {
+	Author string
 }
